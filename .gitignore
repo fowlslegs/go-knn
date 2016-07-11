@@ -22,3 +22,10 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+# vim
+*.swp
+*.un~
+
+# traces folder
+batch/

@@ -20,19 +20,19 @@ Download Wang et al.'s [cell traces](https://crysp.uwaterloo.ca/software/webfing
 
 Extract the original features:
 
-    $ go run src/features/knn.orig/fextractor.go -sites 100 -instances 90 -open 9000
+    $ go run features/knn.orig/fextractor.go -sites 100 -instances 90 -open 9000
     2016/04/12 11:31:15 starting parsing...
     2016/04/12 11:32:27 done parsing (100 sites, 90 instances, 9000 open world, folder "batch/", suffix "f")
 
 Extract the fixed features:
 
-    $ go run src/features/knn.fixed/fextractor.go -sites 100 -instances 90 -open 9000
+    $ go run features/knn.fixed/fextractor.go -sites 100 -instances 90 -open 9000
     2016/04/12 11:30:29 starting parsing...
     2016/04/12 11:30:46 done parsing (100 sites, 90 instances, 9000 open world, folder "batch/", suffix "s")
 
 Run the original attack:
 
-    $ go run src/attacks/knn.orig/knn.orig.go
+    $ go run attacks/knn.orig/knn.orig.go
     2016/04/12 11:32:49 loaded instances: main
     2016/04/12 11:32:50 loaded instances: training
     2016/04/12 11:32:52 loaded instances: testing
@@ -47,7 +47,7 @@ Run the original attack:
 
 Run the fixed attack:
 
-    $ go run src/attacks/knn.fixed/knn.fixed.go 
+    $ go run attacks/knn.fixed/knn.fixed.go 
     2016/04/12 11:32:45 loaded instances: main
     2016/04/12 11:32:46 loaded instances: training
     2016/04/12 11:32:46 loaded instances: testing
