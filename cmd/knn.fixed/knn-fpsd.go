@@ -278,6 +278,8 @@ func wllcc(xTrain [][]float64, yTrain []float64, rounds, recoPointsNum int, incr
 }
 
 type PredictProbaArgs struct {
+	XTrain      [][]float64
+	YTrain      []float64
 	XTest       [][]float64
 	Weight      []float64
 	NeighborNum int
@@ -290,9 +292,47 @@ func predictProba(dec *json.Decoder) (resultY []float64) {
 		os.Exit(1)
 	}
 
-	resultY = classify(args.XTest, args.Weight, args.NeighborNum)
+	resultY = classify(args.XTrain, args.XTest, args.YTrain, args.Weight, args.NeighborNum)
 	return
 }
 
-// TODO: Implement this function.
-func classify(xTest [][]float64, weight []float64, neighborNum int) (yResult []float64) { return }
+func classify(xTrain, xTest [][]float64, yTrain, weight []float64, neighborNum int) (yResult []float64) {
+	distList := make([]float64, len(xTrain))
+	featNum := len(xTrain[0])
+	presentFeats := make([]int, featNum)
+
+	for i, pTest := range xTest {
+		var numPresent int
+		for j := 0; j < featNum; j++ {
+			if pTest[j] != 0 {
+				presentFeats[numPresent] = j
+				numPresent++
+			}
+		}
+
+		var wg sync.WaitGroup
+		for j, pPrime := range xTrain {
+			wg.Add(1)
+			go func(distList, weight, pTest, pPrime []float64, presentFeats []int, j, numPresent int) {
+				defer wg.Done()
+				distList[j] = getWeightedL1Norm(pTest, pPrime, weight, presentFeats[:numPresent])
+			}(distList, weight, pTest, pPrime, presentFeats, j, numPresent)
+
+		}
+		// Wait for all norms to finishes computing (goroutines)
+		wg.Wait()
+
+		_, maxVal := getMax(distList)
+
+		for j := 0; j < neighborNum; j++ {
+			minIdx, _ := getMin(distList)
+			if yTrain[minIdx] == 0 {
+				yTrain[i] = 0
+				break
+			}
+			distList[minIdx] = maxVal // make sure we don't select the same instance again
+		}
+		yTrain[i] = 1
+	}
+	return
+}
