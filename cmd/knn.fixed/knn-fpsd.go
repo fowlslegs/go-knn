@@ -47,10 +47,10 @@ func fit(dec *json.Decoder) (weight []float64) {
 	return
 }
 
-func getWeightedL1Norm(f1, f2, weight []float64, presentFeats []int) (d float64) {
-	for _, i := range presentFeats {
-		if f2[i] != 0 {
-			d += weight[i] * math.Abs(f1[i]-f2[i])
+func getWeightedL1Norm(p1, p2, weight []float64, presentFeats []int) (d float64) {
+	for _, v := range presentFeats {
+		if p2[v] != 0 {
+			d += weight[v] * math.Abs(p1[v]-p2[v])
 		}
 	}
 	return
@@ -88,7 +88,6 @@ func getMax(distList []float64) (idx int, val float64) {
 
 // Weight Learning by Locally Collapsing Classes
 func wllcc(xTrain [][]float64, yTrain []float64, rounds, recoPointsNum int, increaseWeightsProportionally bool) (weight []float64) {
-	var wg sync.WaitGroup
 	distList := make([]float64, len(xTrain))
 	recoGoodList := make([]int, recoPointsNum)
 	recoBadList := make([]int, recoPointsNum)
@@ -151,14 +150,15 @@ func wllcc(xTrain [][]float64, yTrain []float64, rounds, recoPointsNum int, incr
 		for round := 0; round < rounds; round++ {
 			// Compute the weighted L^1 norm between pTrain and all other points in
 			// xTrain. Parallelized using goroutines.
-			for j := 0; j < featNum; j++ {
+			var wg sync.WaitGroup
+			for j, pPrime := range xTrain {
 				wg.Add(1)
-				go func(distList, weight []float64, presentFeats []int, i, j, numPresent int) {
+				go func(distList, weight, pTrain, pPrime []float64, presentFeats []int, j, numPresent int) {
 					defer wg.Done()
-					distList[j] = getWeightedL1Norm(xTrain[i], xTrain[j], weight, presentFeats[:numPresent])
-				}(distList, weight, presentFeats, i, j, numPresent)
-			}
+					distList[j] = getWeightedL1Norm(pTrain, pPrime, weight, presentFeats[:numPresent])
+				}(distList, weight, pTrain, pPrime, presentFeats, j, numPresent)
 
+			}
 			// Wait for all norms to finishes computing (goroutines)
 			wg.Wait()
 
